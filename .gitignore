@@ -1,0 +1,28 @@
+# Python 缓存文件
+__pycache__/
+*.py[cod]
+*$py.class
+
+# 虚拟环境
+venv/
+env/
+ENV/
+
+# IDE文件
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# 日志文件
+*.log
+
+# 本地测试文件
+test_output/
+*.docx
+*.xlsx
+*.pptx
+
+# 系统文件
+.DS_Store
+Thumbs.db
