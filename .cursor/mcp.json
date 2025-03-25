@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "office-editor": {
+      "command": "python",
+      "args": ["path/to/office_server.py"],
+      "env": {
+        "OFFICE_EDIT_PATH": "path/to/output/folder"
+      }
+    }
+  }
+}
