@@ -1,0 +1,5 @@
+mcp>=0.1.4
+python-docx>=0.8.11
+Pillow>=9.0.0
+# 以下依赖在Windows系统上可选
+# pywin32>=305
