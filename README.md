@@ -1,6 +1,6 @@
 # Office文档处理助手 MCP服务器
 
-这是一个功能强大的MCP（Model Context Protocol）服务器，旨在提供全面的Microsoft Office文档处理能力。通过与Cursor AI助手的集成，可以实现对Word、Excel、PowerPoint等文档的创建、编辑和管理操作，无需离开IDE环境。
+这是一个功能强大的MCP（Model Context Protocol）服务器，旨在提供全面的Microsoft Office文档处理能力。通过与MCP Client（如Claude Desktop、Cursor等）的集成，可以实现对Word、Excel、PowerPoint等文档的创建、编辑和管理操作，无需离开Client环境。
 
 ## 项目背景与目标
 
@@ -154,9 +154,9 @@
 - ✅ 简单格式设置
 
 ### 第三阶段：Excel基础功能
-- 实现Excel工作簿的创建、打开、保存
-- 单元格内容读写
-- 基本格式设置
+- ✅实现Excel工作簿的创建、打开、保存
+- ✅单元格内容读写
+- ✅基本格式设置
 
 ### 第四阶段：PowerPoint基础功能
 - 实现PowerPoint演示文稿的创建、打开、保存
