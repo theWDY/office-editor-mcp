@@ -1,114 +1,117 @@
-# Office文档处理助手 MCP服务器
+# Office Document Processing MCP Server
+
+[![EN](https://img.shields.io/badge/Language-English-blue)](README.md)
+[![CN](https://img.shields.io/badge/语言-中文-red)](README_CN.md)
 
 ![MCP Server](https://img.shields.io/badge/MCP-Server-blue)
 ![Python](https://img.shields.io/badge/Python-3.7+-green)
 ![License](https://img.shields.io/badge/License-MIT-yellow)
 
-基于MCP(Model Context Protocol)的Office文档处理助手，支持在MCP Client中创建和编辑Word、Excel、PowerPoint文档，无需离开AI助手环境。
+An MCP (Model Context Protocol) server for Office document processing, enabling creation and editing of Word, Excel, and PowerPoint documents within MCP Clients without leaving the AI assistant environment.
 
-## 概述
+## Overview
 
-Office-Editor-MCP实现了[Model Context Protocol](https://modelcontextprotocol.io/)标准，将Office文档操作暴露为工具和资源。它为AI助手和Microsoft Office文档之间搭建了桥梁，让您能够通过AI助手创建、编辑、格式化和分析各类Office文档。
+Office-Editor-MCP implements the [Model Context Protocol](https://modelcontextprotocol.io/) standard to expose Office document operations as tools and resources. It serves as a bridge between AI assistants and Microsoft Office documents, allowing you to create, edit, format, and analyze various Office documents through AI assistants.
 
-<!-- 建议: 在此处添加使用截图 -->
+<!-- Suggestion: Add usage screenshots here -->
 
-## 功能特性
+## Features
 
-### Word文档操作
+### Word Document Operations
 
-#### 文档管理
-- 创建新的Word文档，支持元数据（标题、作者等）
-- 提取文本内容和分析文档结构
-- 查看文档属性和统计信息
-- 列出目录中的可用文档
-- 创建文档副本
+#### Document Management
+- Create new Word documents with metadata (title, author, etc.)
+- Extract text content and analyze document structure
+- View document properties and statistics
+- List available documents in a directory
+- Create document copies
 
-#### 内容创建
-- 添加不同级别的标题
-- 插入段落（支持可选样式）
-- 创建自定义数据表格
-- 添加图片（支持比例缩放）
-- 插入分页符
+#### Content Creation
+- Add headings with different levels
+- Insert paragraphs with optional styling
+- Create tables with custom data
+- Add images with proportional scaling
+- Insert page breaks
 
-#### 文本格式化
-- 格式化特定文本部分（粗体、斜体、下划线）
-- 更改文本颜色和字体属性
-- 应用自定义样式到文本元素
-- 在整个文档中搜索和替换文本
+#### Text Formatting
+- Format specific text sections (bold, italic, underline)
+- Change text color and font properties
+- Apply custom styles to text elements
+- Search and replace text throughout documents
 
-### Excel表格操作
+### Excel Operations
 
-#### 表格管理
-- 创建新的Excel工作簿
-- 打开现有Excel文件
-- 添加/删除/重命名工作表
+#### Workbook Management
+- Create new Excel workbooks
+- Open existing Excel files
+- Add/delete/rename worksheets
 
-#### 数据处理
-- 读写单元格内容
-- 插入/删除行列
-- 数据排序和筛选
-- 公式与函数应用
+#### Data Processing
+- Read and write cell contents
+- Insert/delete rows and columns
+- Sort and filter data
+- Apply formulas and functions
 
-### PowerPoint演示文稿操作
+### PowerPoint Operations
 
-#### 演示文稿管理
-- 创建新的PowerPoint演示文稿
-- 添加/删除/重排幻灯片
-- 设置幻灯片主题和背景
+#### Presentation Management
+- Create new PowerPoint presentations
+- Add/delete/rearrange slides
+- Set slide themes and backgrounds
 
-#### 内容编辑
-- 添加文本和图形元素
-- 插入表格和图表
-- 添加动画和转场效果
+#### Content Editing
+- Add text and graphic elements
+- Insert tables and charts
+- Add animations and transitions
 
-### 高级功能
+### Advanced Features
 
-- OCR识别（从图片提取文本）
-- 文档比较（对比两个文档的差异）
-- 文档翻译
-- 文档加密和解密
-- 表格数据导入导出（与数据库交互）
+- OCR recognition (extract text from images)
+- Document comparison (compare differences between documents)
+- Document translation
+- Document encryption and decryption
+- Table data import/export (database interaction)
 
-## 安装指南
+## Installation Guide
 
-### 前提条件
-- Python 3.7 或更高版本
-- pip 包管理器
-- Microsoft Office或兼容组件（如python-docx, openpyxl）
+### Prerequisites
+- Python 3.7 or higher
+- pip package manager
+- Microsoft Office or compatible components (such as python-docx, openpyxl)
 
-### 基本安装
+### Basic Installation
 
 ```bash
-# 克隆仓库
+# Clone the repository
 git clone https://github.com/theWDY/office-editor-mcp.git
 cd office-editor-mcp
 
-# 安装依赖
+# Install dependencies
 pip install -r requirements.txt
 ```
 
-## 配置说明
+## Configuration
 
-### 在Cursor中配置
+### Configuration in Cursor
 
-#### 方法一：UI配置
+#### Method 1: UI Configuration
 
-1. 打开Cursor
-2. 进入设置 > Features > MCP
-3. 点击"+ Add New MCP Server"
-4. 填写配置信息：
-   - 名称：`Office助手`（可根据喜好修改）
-   - 类型：选择`stdio`
-   - 命令：输入运行服务器的完整路径，例如：
+1. Open Cursor
+2. Go to Settings > Features > MCP
+3. Click "+ Add New MCP Server"
+4. Fill in the configuration information:
+   - Name: `Office Assistant` (modify as preferred)
+   - Type: Select `stdio`
+   - Command: Enter the full path to run the server, for example:
      ```
      python /path/to/office_server.py
      ```
-     注意替换为您实际的文件路径
+     Note: Replace with your actual file path
 
-#### 方法二：JSON配置文件（推荐）
+#### Method 2: JSON Configuration File (Recommended)
 
-1. 在项目目录中创建 `.cursor` 文件夹（如果不存在）
-2. 在该文件夹中创建 `mcp.json` 文件，内容如下：
+1. Create a `.cursor` folder in the project directory (if it doesn't exist)
+2. Create an `mcp.json` file in that folder with the following content:
 
 ```json
 {
@@ -122,13 +125,13 @@ pip install -r requirements.txt
 }
 ```
 
-### 在Claude for Desktop中配置
+### Configuration in Claude for Desktop
 
-1. 编辑Claude配置文件：
+1. Edit the Claude configuration file:
    - macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
    - Windows: `%APPDATA%\Claude\claude_desktop_config.json`
 
-2. 添加以下配置：
+2. Add the following configuration:
 
 ```json
 {
@@ -143,38 +146,38 @@ pip install -r requirements.txt
 }
 ```
 
-3. 重启Claude使配置生效。
+3. Restart Claude to apply the configuration.
 
-## 使用示例
+## Usage Examples
 
-配置完成后，您可以向AI助手发出如下指令：
+After configuration, you can issue commands to your AI assistant like:
 
-### Word文档操作
-- "创建一个名为'季度报告.docx'的文档，包含标题页"
-- "在文档中添加一个标题和三个段落"
-- "插入一个4x4的销售数据表格"
-- "将第2段中的'重要'一词设为粗体红色"
-- "搜索并替换所有'旧术语'为'新术语'"
+### Word Document Operations
+- "Create a new document called 'quarterly_report.docx' with a title page"
+- "Add a heading and three paragraphs to the document"
+- "Insert a 4x4 table with sales data"
+- "Make the word 'important' in paragraph 2 bold and red"
+- "Search and replace all instances of 'old term' with 'new term'"
 
-### Excel操作
-- "创建一个新的Excel工作簿，命名为'财务分析.xlsx'"
-- "在A1单元格插入'季度销售额'作为标题"
-- "创建一个包含部门销售数据的表格，并计算总和"
-- "为销售数据创建一个柱状图"
-- "对B列数据进行降序排序"
+### Excel Operations
+- "Create a new Excel workbook named 'financial_analysis.xlsx'"
+- "Insert 'Quarterly Sales' as a title in cell A1"
+- "Create a table with department sales data and calculate the sum"
+- "Create a bar chart for the sales data"
+- "Sort the data in column B in descending order"
 
-### PowerPoint操作
-- "创建一个名为'项目演示.pptx'的演示文稿"
-- "添加一个标题为'项目概述'的新幻灯片"
-- "在第2张幻灯片中插入公司logo图片"
-- "为标题添加飞入动画效果"
+### PowerPoint Operations
+- "Create a presentation named 'project_presentation.pptx'"
+- "Add a new slide with the title 'Project Overview'"
+- "Insert the company logo in slide 2"
+- "Add a fly-in animation to the title"
 
-## API参考
+## API Reference
 
-### Word文档操作
+### Word Document Operations
 
 ```python
-# 文档创建与属性
+# Document Creation and Properties
 create_document(filename, title=None, author=None)
 get_document_info(filename)
 get_document_text(filename)
@@ -182,14 +185,14 @@ get_document_outline(filename)
 list_available_documents(directory=".")
 copy_document(source_filename, destination_filename=None)
 
-# 内容添加
+# Content Addition
 add_heading(filename, text, level=1)
 add_paragraph(filename, text, style=None)
 add_table(filename, rows, cols, data=None)
 add_picture(filename, image_path, width=None)
 add_page_break(filename)
 
-# 文本格式化
+# Text Formatting
 format_text(filename, paragraph_index, start_pos, end_pos, bold=None, 
             italic=None, underline=None, color=None, font_size=None, font_name=None)
 search_and_replace(filename, find_text, replace_text)
@@ -198,92 +201,92 @@ create_custom_style(filename, style_name, bold=None, italic=None,
                     font_size=None, font_name=None, color=None, base_style=None)
 ```
 
-### Excel操作
+### Excel Operations
 
 ```python
-# 工作簿操作
+# Workbook Operations
 create_workbook(filename)
 open_workbook(filename)
 save_workbook(filename, new_filename=None)
 add_worksheet(filename, sheet_name=None)
 list_worksheets(filename)
 
-# 单元格操作
+# Cell Operations
 read_cell(filename, sheet_name, cell_reference)
 write_cell(filename, sheet_name, cell_reference, value)
 format_cell(filename, sheet_name, cell_reference, **format_args)
 ```
 
-### PowerPoint操作
+### PowerPoint Operations
 
 ```python
-# 演示文稿操作
+# Presentation Operations
 create_presentation(filename)
 open_presentation(filename)
 save_presentation(filename, new_filename=None)
 add_slide(filename, layout=None)
 ```
 
-## 故障排除
+## Troubleshooting
 
-### 常见问题
+### Common Issues
 
-1. **缺少样式**
-   - 部分文档可能缺少标题和表格操作所需的样式
-   - 服务器将尝试创建缺少的样式或使用直接格式化
-   - 为获得最佳效果，请使用具有标准Office样式的模板
+1. **Missing Styles**
+   - Some documents may lack required styles for heading and table operations
+   - The server will attempt to create missing styles or use direct formatting
+   - For best results, use templates with standard Office styles
 
-2. **权限问题**
-   - 确保服务器有权读/写文档路径
-   - 使用`copy_document`函数创建锁定文档的可编辑副本
-   - 操作失败时检查文件所有权和权限
+2. **Permission Issues**
+   - Ensure the server has permission to read/write to document paths
+   - Use the `copy_document` function to create editable copies of locked documents
+   - Check file ownership and permissions if operations fail
 
-3. **图片插入问题**
-   - 使用图片的绝对路径
-   - 验证图片格式兼容性（推荐JPEG、PNG）
-   - 检查图片文件大小和权限
+3. **Image Insertion Problems**
+   - Use absolute paths for image files
+   - Verify image format compatibility (JPEG, PNG recommended)
+   - Check image file size and permissions
 
-### 调试
+### Debugging
 
-通过设置环境变量启用详细日志记录：
+Enable detailed logging by setting the environment variable:
 
 ```bash
 export MCP_DEBUG=1  # Linux/macOS
 set MCP_DEBUG=1     # Windows
 ```
 
-## 实施进度
+## Implementation Progress
 
-- ✅ 构建MCP服务器基础框架
-- ✅ 实现与AI助手的成功集成
-- ✅ Word文档的基本操作
-- ✅ Excel工作簿的基本操作
-- ✅ PowerPoint演示文稿的基本操作
-- ⬜ 高级功能完善
-- ⬜ 性能优化
-- ⬜ 跨平台兼容性测试
+- ✅ Build MCP server basic framework
+- ✅ Successful integration with AI assistants
+- ✅ Basic Word document operations
+- ✅ Basic Excel workbook operations
+- ✅ Basic PowerPoint presentation operations
+- ⬜ Advanced features enhancement
+- ⬜ Performance optimization
+- ⬜ Cross-platform compatibility testing
 
-## 贡献指南
+## Contributing
 
-欢迎贡献！请随时提交Pull Request。
+Contributions are welcome! Feel free to submit a Pull Request.
 
-1. Fork本仓库
-2. 创建您的特性分支 (`git checkout -b feature/amazing-feature`)
-3. 提交您的更改 (`git commit -m 'Add some amazing feature'`)
-4. 推送到分支 (`git push origin feature/amazing-feature`)
-5. 开启一个Pull Request
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
-## 许可证
+## License
 
-本项目采用MIT许可证 - 详情请参阅[LICENSE](LICENSE)文件。
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 致谢
+## Acknowledgments
 
-- [Model Context Protocol](https://modelcontextprotocol.io/)提供协议规范
-- [python-docx](https://python-docx.readthedocs.io/)提供Word文档处理
-- [openpyxl](https://openpyxl.readthedocs.io/)提供Excel处理
-- [python-pptx](https://python-pptx.readthedocs.io/)提供PowerPoint处理
+- [Model Context Protocol](https://modelcontextprotocol.io/) for protocol specification
+- [python-docx](https://python-docx.readthedocs.io/) for Word document processing
+- [openpyxl](https://openpyxl.readthedocs.io/) for Excel processing
+- [python-pptx](https://python-pptx.readthedocs.io/) for PowerPoint processing
 
 ---
 
-*注意：此服务器与您系统上的文档文件交互。在AI助手或其他MCP客户端中确认操作前，请始终验证所请求操作的适当性。*
+*Note: This server interacts with document files on your system. Always verify that requested operations are appropriate before confirming them in AI assistants or other MCP clients.*
