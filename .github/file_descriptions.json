@@ -1,0 +1,7 @@
+{
+  "excel_server.py": "Excel文档处理服务器模块 - 提供Excel表格创建、编辑及格式化功能",
+  "general_server.py": "通用文档服务器模块 - 提供跨Office应用的通用功能",
+  "powerpoint_server.py": "PowerPoint演示文稿处理服务器模块 - 提供幻灯片创建及编辑功能",
+  "test_server.py": "服务器测试模块 - 用于测试MCP服务器各项功能",
+  "word_server.py": "Word文档处理服务器模块 - 提供文档创建、文本编辑及格式化功能"
+}
