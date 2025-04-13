@@ -1,0 +1,1 @@
+An MCP (Model Context Protocol) server for Office document processing, enabling creation and editing of Word, Excel, and PowerPoint documents within MCP Clients.
