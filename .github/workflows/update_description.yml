@@ -1,0 +1,20 @@
+name: Update Repository Description
+
+on:
+  workflow_dispatch:
+
+jobs:
+  update_description:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Update repository description
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            github.rest.repos.update({
+              owner: 'theWDY',
+              repo: 'office-editor-mcp',
+              description: 'An MCP (Model Context Protocol) server for Office document processing, enabling creation and editing of Word, Excel, and PowerPoint documents within MCP Clients.',
+              homepage: 'https://github.com/theWDY/office-editor-mcp'
+            })
