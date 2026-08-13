@@ -159,6 +159,11 @@ All paths handled by `general_server.py` must stay inside `OFFICE_EDIT_PATH`.
 Move and delete operations are disabled unless
 `OFFICE_ALLOW_DESTRUCTIVE=true` is explicitly configured.
 
+New encrypted files use a versioned Fernet container with a random salt and
+Scrypt password derivation. Existing encrypted files remain readable and can be
+re-encrypted to upgrade them. Batch operations are limited to 100 files and 16
+workers per request.
+
 ## Usage Examples
 
 After configuration, you can issue commands to your AI assistant like:

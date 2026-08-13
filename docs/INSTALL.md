@@ -65,6 +65,9 @@ pip install -r requirements.txt
 访问该目录内的路径；移动和删除默认禁用，只有显式设置
 `OFFICE_ALLOW_DESTRUCTIVE=true`后才会开放。
 
+新加密文件使用随机盐和Scrypt密钥派生；旧版加密文件仍可读取。批处理请求最多处理
+100个文件，并限制为最多16个工作线程。
+
 3. 重启Cursor使配置生效。
 
 ## 4. 功能测试

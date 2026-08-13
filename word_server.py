@@ -25,8 +25,8 @@ try:
     from docx.oxml import OxmlElement
     import docx.opc.constants
 except ImportError:
-    print("警告: 未检测到python-docx库，Word文档功能将不可用")
-    print("请使用以下命令安装: pip install python-docx")
+    print("警告: 未检测到python-docx库，Word文档功能将不可用", file=sys.stderr)
+    print("请使用以下命令安装: pip install python-docx", file=sys.stderr)
     docx_installed = False
 
 # 尝试导入Pillow库，用于图片处理
@@ -34,8 +34,8 @@ pillow_installed = True
 try:
     from PIL import Image
 except ImportError:
-    print("警告: 未检测到Pillow库，图片处理功能将受限")
-    print("请使用以下命令安装: pip install Pillow")
+    print("警告: 未检测到Pillow库，图片处理功能将受限", file=sys.stderr)
+    print("请使用以下命令安装: pip install Pillow", file=sys.stderr)
     pillow_installed = False
 
 # 创建一个MCP服务器，保持名称与配置文件一致
@@ -447,7 +447,8 @@ def set_paragraph_spacing(
     # 打印接收到的参数，用于调试
     print(f"接收到的参数: file_path={file_path}, paragraph_index={paragraph_index}, "
           f"before_spacing={before_spacing}, after_spacing={after_spacing}, "
-          f"line_spacing={line_spacing}, line_spacing_rule={line_spacing_rule}")
+          f"line_spacing={line_spacing}, line_spacing_rule={line_spacing_rule}",
+          file=sys.stderr)
     
     # 检查参数是否为None
     if paragraph_index is None:
@@ -1834,5 +1835,5 @@ def merge_documents(
 
 if __name__ == "__main__":
     # 运行MCP服务器
-    print("启动OFFICE EDITOR服务器...")
-    mcp.run() 
+    print("启动OFFICE EDITOR服务器...", file=sys.stderr)
+    mcp.run()

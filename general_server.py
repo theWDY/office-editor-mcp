@@ -31,28 +31,72 @@ logging.basicConfig(
 
 logger = logging.getLogger("GeneralServer")
 
-# 导入Office操作相关库
+# 独立加载可选依赖，避免一个缺失包禁用所有通用工具。
+def _optional_import_failed(feature: str, error: ImportError) -> None:
+    logger.warning("%s 功能依赖不可用: %s", feature, error)
+
+
 try:
     import docx
     from docx.shared import Pt, RGBColor, Inches
+except ImportError as error:
+    _optional_import_failed("Word", error)
+
+try:
     import openpyxl
     from openpyxl.utils import get_column_letter
     from openpyxl.styles import Font, PatternFill, Alignment
+except ImportError as error:
+    _optional_import_failed("Excel", error)
+
+try:
     from pptx import Presentation
     from pptx.util import Inches as PptxInches
+except ImportError as error:
+    _optional_import_failed("PowerPoint", error)
+
+try:
     import pdf2docx
+except ImportError as error:
+    _optional_import_failed("PDF转换", error)
+
+try:
     import PyPDF2
+except ImportError as error:
+    _optional_import_failed("PDF读取", error)
+
+try:
     import pytesseract
+except ImportError as error:
+    _optional_import_failed("OCR", error)
+
+try:
     from PIL import Image
+except ImportError as error:
+    _optional_import_failed("图片处理", error)
+
+try:
     import deepl
+except ImportError as error:
+    _optional_import_failed("翻译", error)
+
+try:
     import cryptography
     from cryptography.fernet import Fernet
+    from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
+except ImportError as error:
+    _optional_import_failed("加密", error)
+
+try:
     import sqlalchemy
     from sqlalchemy import create_engine, text, MetaData, Table, Column, inspect
+except ImportError as error:
+    _optional_import_failed("数据库", error)
+
+try:
     import pandas as pd
-except ImportError as e:
-    logger.error(f"导入错误: {e}")
-    logger.info("请使用 pip install -r requirements.txt 安装所需依赖")
+except ImportError as error:
+    _optional_import_failed("数据处理", error)
 
 # 全局变量
 OUTPUT_DIR = os.environ.get(
@@ -84,6 +128,13 @@ def _resolve_workspace_path(file_path: str) -> str:
     return str(resolved)
 
 
+def _prepare_output_path(file_path: str) -> str:
+    """Resolve an output path inside the workspace and create its parent."""
+    resolved = Path(_resolve_workspace_path(file_path))
+    resolved.parent.mkdir(parents=True, exist_ok=True)
+    return str(resolved)
+
+
 def _destructive_operations_enabled() -> bool:
     """Destructive file operations require an explicit opt-in."""
     return os.environ.get("OFFICE_ALLOW_DESTRUCTIVE", "").lower() in {
@@ -91,8 +142,47 @@ def _destructive_operations_enabled() -> bool:
     }
 
 
+ENCRYPTION_MAGIC = b"OEMCP\x01"
+ENCRYPTION_SALT_SIZE = 16
+MAX_BATCH_FILES = 100
+MAX_BATCH_WORKERS = 16
+
+
+def _derive_encryption_key(password: str, salt: bytes) -> bytes:
+    """Derive a Fernet key using a salted, intentionally expensive KDF."""
+    if not password:
+        raise ValueError("密码不能为空")
+    kdf = Scrypt(salt=salt, length=32, n=2**14, r=8, p=1)
+    return base64.urlsafe_b64encode(kdf.derive(password.encode("utf-8")))
+
+
+def _encrypt_payload(data: bytes, password: str) -> bytes:
+    salt = os.urandom(ENCRYPTION_SALT_SIZE)
+    token = Fernet(_derive_encryption_key(password, salt)).encrypt(data)
+    return ENCRYPTION_MAGIC + salt + token
+
+
+def _decrypt_payload(payload: bytes, password: str) -> Tuple[bytes, bool]:
+    """Decrypt current containers and legacy unsalted Fernet payloads."""
+    if payload.startswith(ENCRYPTION_MAGIC):
+        header_size = len(ENCRYPTION_MAGIC) + ENCRYPTION_SALT_SIZE
+        if len(payload) <= header_size:
+            raise ValueError("加密文件格式无效")
+        salt = payload[len(ENCRYPTION_MAGIC):header_size]
+        token = payload[header_size:]
+        key = _derive_encryption_key(password, salt)
+        return Fernet(key).decrypt(token), False
+
+    # Backward compatibility for files created before the versioned container.
+    legacy_key = base64.urlsafe_b64encode(
+        hashlib.sha256(password.encode("utf-8")).digest()
+    )
+    return Fernet(legacy_key).decrypt(payload), True
+
+
 def extract_document_text(doc_path: str) -> str:
     """从不同类型的文档中提取文本内容"""
+    doc_path = _resolve_workspace_path(doc_path)
     ext = os.path.splitext(doc_path)[1].lower()
     
     try:
@@ -148,6 +238,7 @@ def extract_document_text(doc_path: str) -> str:
 
 def replace_placeholders(file_path: str, data_mapping: Dict[str, List[str]], index: int):
     """替换文档中的占位符"""
+    file_path = _resolve_workspace_path(file_path)
     ext = os.path.splitext(file_path)[1].lower()
     
     try:
@@ -227,6 +318,8 @@ def ocr_recognize_text(image_path: str, language: str = "chi_sim+eng") -> Dict[s
         if 'pytesseract' not in sys.modules:
             return {"success": False, "message": "缺少必要依赖: pytesseract"}
         
+        image_path = _resolve_workspace_path(image_path)
+
         # 检查图片文件是否存在
         if not os.path.exists(image_path):
             return {"success": False, "message": f"图片文件不存在: {image_path}"}
@@ -243,7 +336,9 @@ def ocr_recognize_text(image_path: str, language: str = "chi_sim+eng") -> Dict[s
         end_time = time.time()
         
         # 保存识别结果到txt文件
-        output_file = os.path.join(OUTPUT_DIR, os.path.splitext(os.path.basename(image_path))[0] + "_ocr.txt")
+        output_file = _prepare_output_path(
+            os.path.splitext(os.path.basename(image_path))[0] + "_ocr.txt"
+        )
         with open(output_file, "w", encoding="utf-8") as f:
             f.write(text)
         
@@ -273,6 +368,9 @@ def compare_documents(doc1_path: str, doc2_path: str, output_format: str = "html
         包含比较结果的字典
     """
     try:
+        doc1_path = _resolve_workspace_path(doc1_path)
+        doc2_path = _resolve_workspace_path(doc2_path)
+
         # 检查文件是否存在
         if not os.path.exists(doc1_path):
             return {"success": False, "message": f"文件不存在: {doc1_path}"}
@@ -298,13 +396,13 @@ def compare_documents(doc1_path: str, doc2_path: str, output_format: str = "html
         if output_format == 'html':
             diff = difflib.HtmlDiff()
             result = diff.make_file(lines1, lines2, os.path.basename(doc1_path), os.path.basename(doc2_path))
-            output_file = os.path.join(OUTPUT_DIR, "document_diff.html")
+            output_file = _prepare_output_path("document_diff.html")
             with open(output_file, "w", encoding="utf-8") as f:
                 f.write(result)
         else:  # text format
             diff = difflib.unified_diff(lines1, lines2, os.path.basename(doc1_path), os.path.basename(doc2_path))
             result = '\n'.join(list(diff))
-            output_file = os.path.join(OUTPUT_DIR, "document_diff.txt")
+            output_file = _prepare_output_path("document_diff.txt")
             with open(output_file, "w", encoding="utf-8") as f:
                 f.write(result)
         
@@ -338,6 +436,8 @@ def translate_document(doc_path: str, target_language: str = "ZH", api_key: str 
         if 'deepl' not in sys.modules:
             return {"success": False, "message": "缺少必要依赖: deepl"}
         
+        doc_path = _resolve_workspace_path(doc_path)
+
         # 检查文件是否存在
         if not os.path.exists(doc_path):
             return {"success": False, "message": f"文件不存在: {doc_path}"}
@@ -366,7 +466,9 @@ def translate_document(doc_path: str, target_language: str = "ZH", api_key: str 
         
         # 保存翻译结果
         filename = os.path.splitext(os.path.basename(doc_path))[0]
-        output_file = os.path.join(OUTPUT_DIR, f"{filename}_translated_{target_language}.txt")
+        output_file = _prepare_output_path(
+            f"{filename}_translated_{target_language}.txt"
+        )
         with open(output_file, "w", encoding="utf-8") as f:
             f.write(translated_text)
         
@@ -400,6 +502,8 @@ def encrypt_document(doc_path: str, password: str) -> Dict[str, Any]:
         if 'cryptography' not in sys.modules:
             return {"success": False, "message": "缺少必要依赖: cryptography"}
         
+        doc_path = _resolve_workspace_path(doc_path)
+
         # 检查文件是否存在
         if not os.path.exists(doc_path):
             return {"success": False, "message": f"文件不存在: {doc_path}"}
@@ -408,17 +512,12 @@ def encrypt_document(doc_path: str, password: str) -> Dict[str, Any]:
         with open(doc_path, 'rb') as file:
             file_data = file.read()
         
-        # 生成密钥
-        password_bytes = password.encode('utf-8')
-        key = base64.urlsafe_b64encode(hashlib.sha256(password_bytes).digest())
-        
-        # 使用Fernet对称加密
-        fernet = Fernet(key)
-        encrypted_data = fernet.encrypt(file_data)
+        # 使用带随机盐的Scrypt派生密钥，并写入带版本的加密容器
+        encrypted_data = _encrypt_payload(file_data, password)
         
         # 保存加密文件
         filename = os.path.splitext(os.path.basename(doc_path))[0]
-        output_file = os.path.join(OUTPUT_DIR, f"{filename}_encrypted.bin")
+        output_file = _prepare_output_path(f"{filename}_encrypted.bin")
         with open(output_file, 'wb') as file:
             file.write(encrypted_data)
         
@@ -451,6 +550,8 @@ def decrypt_document(encrypted_file_path: str, password: str, output_format: str
         if 'cryptography' not in sys.modules:
             return {"success": False, "message": "缺少必要依赖: cryptography"}
         
+        encrypted_file_path = _resolve_workspace_path(encrypted_file_path)
+
         # 检查文件是否存在
         if not os.path.exists(encrypted_file_path):
             return {"success": False, "message": f"文件不存在: {encrypted_file_path}"}
@@ -459,14 +560,11 @@ def decrypt_document(encrypted_file_path: str, password: str, output_format: str
         with open(encrypted_file_path, 'rb') as file:
             encrypted_data = file.read()
         
-        # 生成密钥
-        password_bytes = password.encode('utf-8')
-        key = base64.urlsafe_b64encode(hashlib.sha256(password_bytes).digest())
-        
         # 解密数据
         try:
-            fernet = Fernet(key)
-            decrypted_data = fernet.decrypt(encrypted_data)
+            decrypted_data, used_legacy_format = _decrypt_payload(
+                encrypted_data, password
+            )
         except Exception as e:
             return {"success": False, "message": f"解密失败，密码可能不正确: {str(e)}"}
         
@@ -479,13 +577,16 @@ def decrypt_document(encrypted_file_path: str, password: str, output_format: str
         if filename.endswith("_encrypted"):
             filename = filename[:-10]  # 移除"_encrypted"后缀
             
-        output_file = os.path.join(OUTPUT_DIR, f"{filename}_decrypted{output_ext}")
+        output_file = _prepare_output_path(f"{filename}_decrypted{output_ext}")
         with open(output_file, 'wb') as file:
             file.write(decrypted_data)
         
         return {
             "success": True,
-            "message": "文档解密完成",
+            "message": (
+                "文档解密完成（已兼容读取旧版加密格式，建议重新加密）"
+                if used_legacy_format else "文档解密完成"
+            ),
             "output_file": output_file
         }
         
@@ -515,6 +616,8 @@ def export_excel_to_database(excel_file: str, db_connection_string: str, table_n
         if 'pandas' not in sys.modules or 'sqlalchemy' not in sys.modules:
             return {"success": False, "message": "缺少必要依赖: pandas 或 sqlalchemy"}
         
+        excel_file = _resolve_workspace_path(excel_file)
+
         # 检查文件是否存在
         if not os.path.exists(excel_file):
             return {"success": False, "message": f"文件不存在: {excel_file}"}
@@ -573,10 +676,7 @@ def import_database_to_excel(db_connection_string: str, query: str, output_file:
         df = pd.read_sql(query, engine)
         
         # 设置输出文件名
-        if not output_file:
-            output_file = os.path.join(OUTPUT_DIR, "query_result.xlsx")
-        elif not os.path.isabs(output_file):
-            output_file = os.path.join(OUTPUT_DIR, output_file)
+        output_file = _prepare_output_path(output_file or "query_result.xlsx")
             
         # 导出数据到Excel
         df.to_excel(output_file, index=False)
@@ -615,6 +715,14 @@ def batch_create_documents(template_path: str, output_prefix: str, count: int,
         包含操作结果的字典
     """
     try:
+        if count < 1 or count > MAX_BATCH_FILES:
+            return {
+                "success": False,
+                "message": f"生成数量必须在1到{MAX_BATCH_FILES}之间",
+            }
+
+        template_path = _resolve_workspace_path(template_path)
+
         # 检查模板文件是否存在
         if not os.path.exists(template_path):
             return {"success": False, "message": f"模板文件不存在: {template_path}"}
@@ -629,8 +737,7 @@ def batch_create_documents(template_path: str, output_prefix: str, count: int,
         _, ext = os.path.splitext(template_path)
         
         # 创建输出目录
-        if not os.path.exists(OUTPUT_DIR):
-            os.makedirs(OUTPUT_DIR)
+        _workspace_root().mkdir(parents=True, exist_ok=True)
         
         # 批量生成文档
         start_time = time.time()
@@ -638,7 +745,7 @@ def batch_create_documents(template_path: str, output_prefix: str, count: int,
         
         for i in range(count):
             # 创建输出文件路径
-            output_file = os.path.join(OUTPUT_DIR, f"{output_prefix}_{i+1}{ext}")
+            output_file = _prepare_output_path(f"{output_prefix}_{i+1}{ext}")
             
             # 复制模板文件
             shutil.copy2(template_path, output_file)
@@ -685,7 +792,6 @@ def batch_process_documents(files: List[str], operation: str, params: Dict[str, 
             "ocr_recognize_text": ocr_recognize_text,
             "compare_documents": compare_documents,
             "export_excel_to_database": export_excel_to_database,
-            "import_database_to_excel": import_database_to_excel,
             "general_file_operations": general_file_operations
         }
         
@@ -697,6 +803,17 @@ def batch_process_documents(files: List[str], operation: str, params: Dict[str, 
         op_func = operations_mapping[operation]
         if params is None:
             params = {}
+
+        if not files or len(files) > MAX_BATCH_FILES:
+            return {
+                "success": False,
+                "message": f"文件数量必须在1到{MAX_BATCH_FILES}之间",
+            }
+        if max_workers < 1 or max_workers > MAX_BATCH_WORKERS:
+            return {
+                "success": False,
+                "message": f"max_workers必须在1到{MAX_BATCH_WORKERS}之间",
+            }
         
         # 初始化结果列表
         results = []
@@ -715,7 +832,9 @@ def batch_process_documents(files: List[str], operation: str, params: Dict[str, 
                     "encrypt_document": "doc_path",
                     "decrypt_document": "encrypted_file_path",
                     "ocr_recognize_text": "image_path",
-                    "compare_documents": "doc1_path"  # 注意: 这种情况可能需要特殊处理
+                    "compare_documents": "doc1_path",
+                    "export_excel_to_database": "excel_file",
+                    "general_file_operations": "source_path",
                 }
                 
                 param_name = param_name_mapping.get(operation, "file_path")

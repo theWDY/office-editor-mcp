@@ -22,8 +22,8 @@ try:
     from openpyxl.styles.colors import Color
     from openpyxl.utils import get_column_letter, column_index_from_string
 except ImportError:
-    print("警告: 未检测到openpyxl库，Excel功能将不可用")
-    print("请使用以下命令安装: pip install openpyxl")
+    print("警告: 未检测到openpyxl库，Excel功能将不可用", file=sys.stderr)
+    print("请使用以下命令安装: pip install openpyxl", file=sys.stderr)
     openpyxl_installed = False
 
 # 尝试导入Pandas库，用于数据处理
@@ -32,8 +32,8 @@ try:
     import pandas as pd
     import numpy as np
 except ImportError:
-    print("警告: 未检测到pandas库，高级数据处理功能将受限")
-    print("请使用以下命令安装: pip install pandas numpy")
+    print("警告: 未检测到pandas库，高级数据处理功能将受限", file=sys.stderr)
+    print("请使用以下命令安装: pip install pandas numpy", file=sys.stderr)
     pandas_installed = False
 
 # 创建一个MCP服务器，保持名称与配置文件一致
@@ -3449,5 +3449,5 @@ def apply_if(
 
 if __name__ == "__main__":
     # 运行MCP服务器
-    print("启动Excel MCP服务器...")
+    print("启动Excel MCP服务器...", file=sys.stderr)
     mcp.run()
