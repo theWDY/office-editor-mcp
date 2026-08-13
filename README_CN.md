@@ -75,9 +75,10 @@ Office-Editor-MCP实现了[Model Context Protocol](https://modelcontextprotocol.
 ## 安装指南
 
 ### 前提条件
-- Python 3.7 或更高版本
+- Python 3.10 或更高版本
 - pip 包管理器
-- Microsoft Office或兼容组件（如python-docx, openpyxl）
+- 仅 PDF 导出、动画、转场和旧版 Office 格式等 Windows COM 功能需要安装 Microsoft Office
+- 使用 `ocr_recognize_text` 时需要另行安装 Tesseract OCR
 
 ### 基本安装
 
@@ -89,6 +90,10 @@ cd office-editor-mcp
 # 安装依赖
 pip install -r requirements.txt
 ```
+
+仓库提供四个独立的 MCP 服务器：`word_server.py`、`excel_server.py`、
+`powerpoint_server.py` 和 `general_server.py`。可以只配置需要的服务器；仓库中的
+`.cursor/mcp.json` 提供了完整的四服务器配置示例。
 
 ## 配置说明
 
@@ -104,7 +109,7 @@ pip install -r requirements.txt
    - 类型：选择`stdio`
    - 命令：输入运行服务器的完整路径，例如：
      ```
-     python /path/to/office_server.py
+     python /path/to/office-editor-mcp/word_server.py
      ```
      注意替换为您实际的文件路径
 
@@ -118,8 +123,8 @@ pip install -r requirements.txt
   "mcpServers": {
     "office-assistant": {
       "command": "python",
-      "args": ["/path/to/office_server.py"],
-      "env": {}
+      "args": ["/path/to/office-editor-mcp/word_server.py"],
+      "env": {"OFFICE_EDIT_PATH": "/path/to/output"}
     }
   }
 }
@@ -139,7 +144,7 @@ pip install -r requirements.txt
     "office-document-server": {
       "command": "python",
       "args": [
-        "/path/to/office_server.py"
+        "/path/to/office-editor-mcp/word_server.py"
       ]
     }
   }
@@ -147,6 +152,9 @@ pip install -r requirements.txt
 ```
 
 3. 重启Claude使配置生效。
+
+`general_server.py` 处理的所有路径都必须位于 `OFFICE_EDIT_PATH` 内。移动和删除操作
+默认禁用，只有显式配置 `OFFICE_ALLOW_DESTRUCTIVE=true` 后才会开放。
 
 ## 使用示例
 

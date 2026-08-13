@@ -1,10 +1,32 @@
 {
   "mcpServers": {
-    "office-editor": {
+    "office-word": {
       "command": "python",
-      "args": ["path/to/office_server.py"],
+      "args": ["C:/path/to/office-editor-mcp/word_server.py"],
       "env": {
-        "OFFICE_EDIT_PATH": "path/to/output/folder"
+        "OFFICE_EDIT_PATH": "C:/path/to/output/folder"
+      }
+    },
+    "office-excel": {
+      "command": "python",
+      "args": ["C:/path/to/office-editor-mcp/excel_server.py"],
+      "env": {
+        "OFFICE_EDIT_PATH": "C:/path/to/output/folder"
+      }
+    },
+    "office-powerpoint": {
+      "command": "python",
+      "args": ["C:/path/to/office-editor-mcp/powerpoint_server.py"],
+      "env": {
+        "OFFICE_EDIT_PATH": "C:/path/to/output/folder"
+      }
+    },
+    "office-general": {
+      "command": "python",
+      "args": ["C:/path/to/office-editor-mcp/general_server.py"],
+      "env": {
+        "OFFICE_EDIT_PATH": "C:/path/to/output/folder",
+        "OFFICE_ALLOW_DESTRUCTIVE": "false"
       }
     }
   }

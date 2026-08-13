@@ -4,11 +4,10 @@
 
 本项目需要以下依赖：
 
-1. Python 3.7或更高版本
-2. MCP SDK
-3. python-docx库（用于Word文档操作）
-4. Pillow库（用于图像处理）
-5. pywin32（可选，Windows系统用于增强功能）
+1. Python 3.10或更高版本
+2. MCP SDK和Office文档处理依赖（由`requirements.txt`统一安装）
+3. Microsoft Office（仅Windows COM增强功能需要）
+4. Tesseract OCR（仅OCR功能需要）
 
 ### 使用pip安装
 
@@ -18,10 +17,15 @@ pip install -r requirements.txt
 
 ## 2. 服务器配置
 
-项目提供了两个主要的服务器实现：
+项目提供四个独立的服务器实现：
 
-1. `create_txt_server.py` - 简单文本文件创建服务器（仅用于功能测试）
-2. `office_server.py` - 完整的Office文档处理服务器（需要下载完整项目）
+1. `word_server.py` - Word文档操作
+2. `excel_server.py` - Excel工作簿操作
+3. `powerpoint_server.py` - PowerPoint演示文稿操作
+4. `general_server.py` - OCR、比较、翻译、加密和批处理等通用功能
+
+仓库中没有`office_server.py`。客户端可以只配置需要的服务器，也可以参考
+`.cursor/mcp.json`一次配置全部四个服务器。
 
 ## 3. 在Cursor中配置
 
@@ -35,7 +39,7 @@ pip install -r requirements.txt
    - 类型：选择`stdio`
    - 命令：输入运行服务器的完整路径，例如：
      ```
-     python C:/path/to/office_server.py
+     python C:/path/to/office-editor-mcp/word_server.py
      ```
 
 ### 方法二：通过配置文件配置（推荐）
@@ -46,9 +50,9 @@ pip install -r requirements.txt
 ```json
 {
   "mcpServers": {
-    "office-editor": {
+    "office-word": {
       "command": "python",
-      "args": ["C:/path/to/office_server.py"],
+      "args": ["C:/path/to/office-editor-mcp/word_server.py"],
       "env": {
         "OFFICE_EDIT_PATH": "C:/path/to/output/folder"
       }
@@ -57,25 +61,20 @@ pip install -r requirements.txt
 }
 ```
 
-请替换路径为您实际的文件路径。`OFFICE_EDIT_PATH`环境变量指定文档的默认保存位置，如不设置则默认为桌面。
+请替换路径为实际的绝对路径。`OFFICE_EDIT_PATH`指定文档工作目录。通用服务器只允许
+访问该目录内的路径；移动和删除默认禁用，只有显式设置
+`OFFICE_ALLOW_DESTRUCTIVE=true`后才会开放。
 
 3. 重启Cursor使配置生效。
 
 ## 4. 功能测试
 
-项目包含一个测试脚本 `test_server.py`，它可以：
-
-1. 检查MCP SDK是否正确安装
-2. 验证服务器脚本是否存在
-3. 尝试启动服务器并测试基本功能
-
-运行测试脚本：
+运行静态编译和安全边界测试：
 
 ```bash
-python test_server.py
+python -m compileall -q .
+python -m unittest discover -s tests -v
 ```
-
-如果测试通过，您会看到一系列成功消息，表明服务器已正确配置。
 
 ## 5. 使用示例
 

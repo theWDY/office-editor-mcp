@@ -13,6 +13,12 @@ import logging
 import time
 import base64
 import io
+import concurrent.futures
+import difflib
+import hashlib
+import shutil
+import threading
+from pathlib import Path
 from mcp.server.fastmcp import FastMCP
 from typing import Dict, Any, List, Union, Tuple
 
@@ -38,29 +44,53 @@ try:
     import PyPDF2
     import pytesseract
     from PIL import Image
-    import difflib
     import deepl
     import cryptography
     from cryptography.fernet import Fernet
     import sqlalchemy
     from sqlalchemy import create_engine, text, MetaData, Table, Column, inspect
-    import threading
-    import concurrent.futures
     import pandas as pd
-    import shutil
-    import hashlib
 except ImportError as e:
     logger.error(f"导入错误: {e}")
-    logger.info("请安装所需依赖: pip install python-docx openpyxl python-pptx pdf2docx PyPDF2 pytesseract Pillow difflib deepl cryptography sqlalchemy pandas")
+    logger.info("请使用 pip install -r requirements.txt 安装所需依赖")
 
 # 全局变量
-OUTPUT_DIR = os.environ.get("OFFICE_EDIT_PATH", os.path.expanduser("~"))
+OUTPUT_DIR = os.environ.get(
+    "OFFICE_EDIT_PATH", os.path.join(os.path.expanduser("~"), "office-editor-output")
+)
 logger.info(f"输出目录设置为: {OUTPUT_DIR}")
 
 # 创建一个MCP服务器
 mcp = FastMCP("office-editor")
 
 # 工具函数
+def _workspace_root() -> Path:
+    """Return the configured workspace as an absolute, normalized path."""
+    return Path(OUTPUT_DIR).expanduser().resolve()
+
+
+def _resolve_workspace_path(file_path: str) -> str:
+    """Resolve a path and reject access outside OFFICE_EDIT_PATH."""
+    root = _workspace_root()
+    candidate = Path(file_path).expanduser()
+    if not candidate.is_absolute():
+        candidate = root / candidate
+
+    resolved = candidate.resolve(strict=False)
+    try:
+        resolved.relative_to(root)
+    except ValueError as exc:
+        raise ValueError(f"路径必须位于 OFFICE_EDIT_PATH 内: {file_path}") from exc
+    return str(resolved)
+
+
+def _destructive_operations_enabled() -> bool:
+    """Destructive file operations require an explicit opt-in."""
+    return os.environ.get("OFFICE_ALLOW_DESTRUCTIVE", "").lower() in {
+        "1", "true", "yes", "on"
+    }
+
+
 def extract_document_text(doc_path: str) -> str:
     """从不同类型的文档中提取文本内容"""
     ext = os.path.splitext(doc_path)[1].lower()
@@ -738,14 +768,15 @@ def batch_process_documents(files: List[str], operation: str, params: Dict[str, 
 
 # 文件目录操作功能
 @mcp.tool()
-def general_file_operations(operation: str, source_path: str, 
+def general_file_operations(operation: str, source_path: str,
                          target_path: str = None, recursive: bool = False) -> Dict[str, Any]:
     """
     通用文件和目录操作
     
     Args:
-        operation: 操作类型，"copy"复制, "move"移动, "delete"删除, "list"列表
-        source_path: 源文件或目录路径
+        operation: 操作类型，"copy"复制, "move"移动, "delete"删除, "list"列表。
+                   move/delete 需要设置 OFFICE_ALLOW_DESTRUCTIVE=true
+        source_path: OFFICE_EDIT_PATH 内的源文件或目录路径
         target_path: 目标路径，用于复制和移动操作
         recursive: 是否递归处理子目录
         
@@ -753,6 +784,20 @@ def general_file_operations(operation: str, source_path: str,
         包含操作结果的字典
     """
     try:
+        operation = operation.lower()
+        source_path = _resolve_workspace_path(source_path)
+        if target_path is not None:
+            target_path = _resolve_workspace_path(target_path)
+
+        if operation in {"move", "delete"} and not _destructive_operations_enabled():
+            return {
+                "success": False,
+                "message": (
+                    f"{operation} 操作默认禁用；如确有需要，请显式设置 "
+                    "OFFICE_ALLOW_DESTRUCTIVE=true"
+                ),
+            }
+
         # 检查源路径是否存在
         if not os.path.exists(source_path):
             return {"success": False, "message": f"源路径不存在: {source_path}"}
