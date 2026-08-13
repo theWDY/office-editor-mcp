@@ -1207,7 +1207,7 @@ def insert_chart(file_path: str, slide_index: int, chart_type: str, data: List[L
         return f"错误: 文件 {file_path} 不存在"
     
     # 验证图表类型
-    from pptx.enum.charts import XL_CHART_TYPE
+    from pptx.enum.chart import XL_CHART_TYPE
     chart_type_map = {
         "column": XL_CHART_TYPE.COLUMN_CLUSTERED,
         "line": XL_CHART_TYPE.LINE,

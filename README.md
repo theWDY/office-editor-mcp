@@ -75,9 +75,11 @@ Office-Editor-MCP implements the [Model Context Protocol](https://modelcontextpr
 ## Installation Guide
 
 ### Prerequisites
-- Python 3.7 or higher
+- Python 3.10 or higher
 - pip package manager
-- Microsoft Office or compatible components (such as python-docx, openpyxl)
+- Microsoft Office is only required for Windows COM features such as PDF export,
+  animations, transitions, and legacy Office formats
+- Tesseract OCR is required when using `ocr_recognize_text`
 
 ### Basic Installation
 
@@ -89,6 +91,11 @@ cd office-editor-mcp
 # Install dependencies
 pip install -r requirements.txt
 ```
+
+The repository exposes four independent MCP servers: `word_server.py`,
+`excel_server.py`, `powerpoint_server.py`, and `general_server.py`. Configure
+only the servers you need. The checked-in `.cursor/mcp.json` contains a complete
+four-server example.
 
 ## Configuration
 
@@ -104,7 +111,7 @@ pip install -r requirements.txt
    - Type: Select `stdio`
    - Command: Enter the full path to run the server, for example:
      ```
-     python /path/to/office_server.py
+     python /path/to/office-editor-mcp/word_server.py
      ```
      Note: Replace with your actual file path
 
@@ -118,8 +125,8 @@ pip install -r requirements.txt
   "mcpServers": {
     "office-assistant": {
       "command": "python",
-      "args": ["/path/to/office_server.py"],
-      "env": {}
+      "args": ["/path/to/office-editor-mcp/word_server.py"],
+      "env": {"OFFICE_EDIT_PATH": "/path/to/output"}
     }
   }
 }
@@ -139,7 +146,7 @@ pip install -r requirements.txt
     "office-document-server": {
       "command": "python",
       "args": [
-        "/path/to/office_server.py"
+        "/path/to/office-editor-mcp/word_server.py"
       ]
     }
   }
@@ -147,6 +154,10 @@ pip install -r requirements.txt
 ```
 
 3. Restart Claude to apply the configuration.
+
+All paths handled by `general_server.py` must stay inside `OFFICE_EDIT_PATH`.
+Move and delete operations are disabled unless
+`OFFICE_ALLOW_DESTRUCTIVE=true` is explicitly configured.
 
 ## Usage Examples
 
