@@ -156,6 +156,9 @@ pip install -r requirements.txt
 `general_server.py` 处理的所有路径都必须位于 `OFFICE_EDIT_PATH` 内。移动和删除操作
 默认禁用，只有显式配置 `OFFICE_ALLOW_DESTRUCTIVE=true` 后才会开放。
 
+新加密文件使用带随机盐和 Scrypt 密钥派生的版本化 Fernet 容器；旧版加密文件仍可
+读取，并可通过重新加密完成升级。每次批处理最多接受100个文件和16个工作线程。
+
 ## 使用示例
 
 配置完成后，您可以向AI助手发出如下指令：

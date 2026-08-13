@@ -24,8 +24,8 @@ try:
     from pptx.enum.shapes import MSO_SHAPE
     from pptx.enum.dml import MSO_THEME_COLOR
 except ImportError:
-    print("警告: 未检测到python-pptx库，PowerPoint功能将不可用")
-    print("请使用以下命令安装: pip install python-pptx")
+    print("警告: 未检测到python-pptx库，PowerPoint功能将不可用", file=sys.stderr)
+    print("请使用以下命令安装: pip install python-pptx", file=sys.stderr)
     pptx_installed = False
 
 # 尝试导入Pillow库，用于图片处理
@@ -33,8 +33,8 @@ pillow_installed = True
 try:
     from PIL import Image
 except ImportError:
-    print("警告: 未检测到Pillow库，图片处理功能将受限")
-    print("请使用以下命令安装: pip install Pillow")
+    print("警告: 未检测到Pillow库，图片处理功能将受限", file=sys.stderr)
+    print("请使用以下命令安装: pip install Pillow", file=sys.stderr)
     pillow_installed = False
 
 # 创建一个MCP服务器，保持名称与配置文件一致
@@ -1701,8 +1701,8 @@ if __name__ == "__main__":
         mcp.run()
     except KeyboardInterrupt:
         # 优雅地处理Ctrl+C中断
-        print("服务器已停止")
+        print("服务器已停止", file=sys.stderr)
     except Exception as e:
         # 处理其他异常
-        print(f"服务器运行时出错: {str(e)}")
+        print(f"服务器运行时出错: {str(e)}", file=sys.stderr)
         sys.exit(1)
